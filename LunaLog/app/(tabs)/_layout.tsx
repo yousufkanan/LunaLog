@@ -31,7 +31,7 @@ export default function TabLayout() {
         options={{
           title: "History",
           tabBarIcon: ({ color }) => (
-            <MdOutlineLibraryBooks size={28} color={color} />
+            <IconSymbol size={28} name="books.vertical.fill" color={color} />
           ),
         }}
       />

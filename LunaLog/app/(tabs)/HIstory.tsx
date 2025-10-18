@@ -58,15 +58,9 @@ export default function TabTwoScreen() {
       >
         {/* Changed title to "Entries" from your image */}
         <ThemedView style={styles.titleContainer}>
-          <ThemedText
-            type="title"
-            style={{
-              fontFamily: Fonts.rounded,
-            }}
-          >
-            Entries
-          </ThemedText>
+          <ThemedText type="title">Entries</ThemedText>
         </ThemedView>
+
         <ScrollView>
           {/* Render JournalEntryCard instances from getJournalEntries */}
           {entries.map((entry) => (
