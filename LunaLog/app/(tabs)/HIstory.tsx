@@ -1,6 +1,5 @@
 import { Image } from 'expo-image';
 import { Platform, StyleSheet } from 'react-native';
-
 import { Collapsible } from '@/components/ui/collapsible';
 import { ExternalLink } from '@/components/external-link';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
@@ -8,6 +7,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Fonts } from '@/constants/theme';
+import { JournalEntryCard } from '@/components/JournalEntryCard';
 
 export default function TabTwoScreen() {
   return (
@@ -21,15 +21,26 @@ export default function TabTwoScreen() {
           style={styles.headerImage}
         />
       }>
+      {/* Changed title to "Entries" from your image */}
       <ThemedView style={styles.titleContainer}>
         <ThemedText
           type="title"
           style={{
             fontFamily: Fonts.rounded,
           }}>
-          Explore
+          Entries
         </ThemedText>
       </ThemedView>
+
+      {/* --- Added the new JournalEntryCard component instance --- */}
+      <JournalEntryCard
+        title="Journal Entry #1"
+        aiSummary="AI Summary"
+        date="Oct 18, 2025" // Using today's date as a placeholder
+        moodScore={10}
+      />
+      {/* --- End of added component --- */}
+
       <ThemedText>This app includes example code to help you get started.</ThemedText>
       <Collapsible title="File-based routing">
         <ThemedText>
@@ -97,7 +108,6 @@ export default function TabTwoScreen() {
     </ParallaxScrollView>
   );
 }
-
 const styles = StyleSheet.create({
   headerImage: {
     color: '#808080',
