@@ -11,9 +11,12 @@ const questionsData: any = require("../../assets/questions.json");
 
 export default function HomeScreen() {
   const [splashFinished, setSplashFinished] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [rating, setRating] = useState<number | null>(null);
+
   if (!splashFinished) {
-        return <AnimatedSplashScreen onFinish={() => setSplashFinished(true)} />;
-      }
+    return <AnimatedSplashScreen onFinish={() => setSplashFinished(true)} />;
+  }
 
   return (
     <ThemedView style={{ flex: 1 }}>
@@ -42,14 +45,23 @@ export default function HomeScreen() {
               ? questionsData
               : [{ prompt: "How was your day?" }];
 
-          const [currentIndex, setCurrentIndex] = useState(0);
-          const [rating, setRating] = useState<number | null>(null);
-
           const stars = Array.from({ length: 10 }, (_, i) => i + 1);
+          const isLast = currentIndex === questionList.length - 1;
+
+          const onSubmit = () => {
+            console.log("Submitting final rating", {
+              questionIndex: currentIndex,
+              rating,
+            });
+          };
 
           const onNext = () => {
+            if (isLast) {
+              onSubmit();
+              return;
+            }
             setRating(null);
-            setCurrentIndex((i) => (i + 1) % questionList.length);
+            setCurrentIndex((i) => i + 1);
           };
 
           const question = questionList[currentIndex]?.prompt || "";
@@ -98,12 +110,12 @@ export default function HomeScreen() {
                           onPress={() => setRating(s)}
                           accessibilityLabel={`Rate ${s} out of 10`}
                           style={({ pressed }) => ({
-                            width: 40,
-                            height: 40,
+                            width: 32,
+                            height: 32,
                             borderRadius: 12,
                             alignItems: "center",
                             justifyContent: "center",
-                            marginRight: 6,
+                            marginRight: 3,
                             marginBottom: 6,
                             backgroundColor: pressed
                               ? "rgba(0,0,0,0.06)"
@@ -161,7 +173,7 @@ export default function HomeScreen() {
                     })}
                   >
                     <ThemedText style={{ color: "#fff", fontWeight: "600" }}>
-                      Log
+                      {isLast ? "Submit" : "Log"}
                     </ThemedText>
                   </Pressable>
                 </ThemedView>
@@ -198,4 +210,3 @@ const styles = StyleSheet.create({
     position: "absolute",
   },
 });
-}
