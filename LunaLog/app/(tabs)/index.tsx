@@ -6,8 +6,6 @@ import { ThemedView } from "@/components/themed-view";
 import React, { useState } from "react";
 import { Pressable } from "react-native";
 const questionsData: any = require("../../assets/questions.json");
-const Animated = require("react-native").Animated;
-const { Dimensions } = require("react-native");
 
 export default function HomeScreen() {
   return (
@@ -32,12 +30,10 @@ export default function HomeScreen() {
         }}
       >
         {(() => {
-          const questionList: string[] =
+          const questionList: any[] =
             Array.isArray(questionsData) && questionsData.length
-              ? questionsData.map((q: any) =>
-                  typeof q === "string" ? q : q?.prompt ?? ""
-                )
-              : ["How was your day?"];
+              ? questionsData
+              : [{ prompt: "How was your day?" }];
 
           const [currentIndex, setCurrentIndex] = useState(0);
           const [rating, setRating] = useState<number | null>(null);
@@ -49,7 +45,7 @@ export default function HomeScreen() {
             setCurrentIndex((i) => (i + 1) % questionList.length);
           };
 
-          const question = questionList[currentIndex];
+          const question = questionList[currentIndex]?.prompt || "";
 
           return (
             <ThemedView style={{ flex: 1, justifyContent: "center" }}>
@@ -71,32 +67,59 @@ export default function HomeScreen() {
                     marginBottom: 12,
                   }}
                 >
-                  {stars.map((s) => (
-                    <Pressable
-                      key={s}
-                      onPress={() => setRating(s)}
-                      accessibilityLabel={`Rate ${s} out of 10`}
-                      style={({ pressed }) => ({
-                        width: 32,
-                        height: 32,
-                        borderRadius: 12,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        marginRight: 4,
-                        marginBottom: 4,
-                        backgroundColor:
-                          rating != null && rating >= s
-                            ? "#ffcc00"
-                            : pressed
-                            ? "rgba(0,0,0,0.06)"
-                            : "rgba(0,0,0,0.03)",
-                      })}
-                    >
-                      <ThemedText style={{ fontSize: 18 }}>
-                        {rating != null && rating >= s ? "★" : "☆"}
-                      </ThemedText>
-                    </Pressable>
-                  ))}
+                  {(() => {
+                    const moonImages = [
+                      require("../../assets/moonRatings/1.png"),
+                      require("../../assets/moonRatings/2.png"),
+                      require("../../assets/moonRatings/3.png"),
+                      require("../../assets/moonRatings/4.png"),
+                      require("../../assets/moonRatings/5.png"),
+                      require("../../assets/moonRatings/6.png"),
+                      require("../../assets/moonRatings/7.png"),
+                      require("../../assets/moonRatings/8.png"),
+                      require("../../assets/moonRatings/9.png"),
+                      require("../../assets/moonRatings/10.png"),
+                    ];
+
+                    return stars.map((s) => {
+                      const idx = s - 1;
+                      const selected = rating != null && rating >= s;
+                      const exactSelected = rating === s;
+                      return (
+                        <Pressable
+                          key={s}
+                          onPress={() => setRating(s)}
+                          accessibilityLabel={`Rate ${s} out of 10`}
+                          style={({ pressed }) => ({
+                            width: 40,
+                            height: 40,
+                            borderRadius: 12,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            marginRight: 6,
+                            marginBottom: 6,
+                            backgroundColor: pressed
+                              ? "rgba(0,0,0,0.06)"
+                              : "transparent",
+                            borderWidth: exactSelected ? 2 : 0,
+                            borderColor: exactSelected
+                              ? "#ffcc00"
+                              : "transparent",
+                          })}
+                        >
+                          <Image
+                            source={moonImages[idx]}
+                            style={{
+                              width: 32,
+                              height: 32,
+                              resizeMode: "contain",
+                              opacity: selected ? 1 : 0.45,
+                            }}
+                          />
+                        </Pressable>
+                      );
+                    });
+                  })()}
                 </ThemedView>
 
                 <ThemedView
@@ -111,48 +134,10 @@ export default function HomeScreen() {
                       ? questionsData[currentIndex]
                       : null;
                     const labels = current?.scaleLabels;
-                    if (Array.isArray(labels) && labels.length >= 2) {
-                      const labelForRating =
-                        rating != null &&
-                        Number.isInteger(rating) &&
-                        rating >= 0 &&
-                        rating < labels.length
-                          ? labels[rating]
-                          : null;
-                      return (
-                        <ThemedView
-                          style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            gap: 8,
-                          }}
-                        >
-                          <ThemedText style={{ color: "#666" }}>
-                            {labels[0]}
-                          </ThemedText>
-                          <ThemedText
-                            style={{ color: "#666", marginHorizontal: 8 }}
-                          >
-                            {rating == null
-                              ? "No rating"
-                              : labelForRating ?? `Selected: ${rating}/10`}
-                          </ThemedText>
-                          <ThemedText style={{ color: "#666" }}>
-                            {labels[1]}
-                          </ThemedText>
-                        </ThemedView>
-                      );
-                    }
+
                     return (
                       <ThemedText style={{ color: "#666" }}>
-                        {rating == null
-                          ? "No rating"
-                          : Array.isArray(labels) &&
-                            Number.isInteger(rating) &&
-                            rating >= 0 &&
-                            rating < labels.length
-                          ? labels[rating]
-                          : `Selected: ${rating}/10`}
+                        {rating == null ? "No rating" : labels[rating]}
                       </ThemedText>
                     );
                   })()}
