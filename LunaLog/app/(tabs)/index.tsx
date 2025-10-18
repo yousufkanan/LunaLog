@@ -1,87 +1,197 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { Image } from "expo-image";
+import { Platform, ScrollView, StyleSheet } from "react-native";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import React, { useState } from "react";
+import { Pressable } from "react-native";
+const questionsData: any = require("../../assets/questions.json");
+const Animated = require("react-native").Animated;
+const { Dimensions } = require("react-native");
 
 export default function HomeScreen() {
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
+    <ThemedView style={{ flex: 1 }}>
+      <ThemedView
+        style={{
+          paddingTop: Platform.OS === "android" ? 48 : 64,
+          paddingHorizontal: 20,
+          paddingBottom: 12,
+        }}
+      >
+        <ThemedView style={styles.titleContainer}>
+          <ThemedText type="title">LunaLog</ThemedText>
+        </ThemedView>
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
+      <ThemedView
+        style={{
+          flex: 1,
+          paddingHorizontal: 20,
+          justifyContent: "center",
+        }}
+      >
+        {(() => {
+          const questionList: string[] =
+            Array.isArray(questionsData) && questionsData.length
+              ? questionsData.map((q: any) =>
+                  typeof q === "string" ? q : q?.prompt ?? ""
+                )
+              : ["How was your day?"];
+
+          const [currentIndex, setCurrentIndex] = useState(0);
+          const [rating, setRating] = useState<number | null>(null);
+
+          const stars = Array.from({ length: 10 }, (_, i) => i + 1);
+
+          const onNext = () => {
+            setRating(null);
+            setCurrentIndex((i) => (i + 1) % questionList.length);
+          };
+
+          const question = questionList[currentIndex];
+
+          return (
+            <ThemedView style={{ flex: 1, justifyContent: "center" }}>
+              <ThemedView
+                style={{
+                  marginHorizontal: 8,
+                }}
+              >
+                <ThemedText
+                  style={{ fontSize: 20, fontWeight: "600", marginBottom: 12 }}
+                >
+                  {question}
+                </ThemedText>
+
+                <ThemedView
+                  style={{
+                    flexDirection: "row",
+                    flexWrap: "wrap",
+                    marginBottom: 12,
+                  }}
+                >
+                  {stars.map((s) => (
+                    <Pressable
+                      key={s}
+                      onPress={() => setRating(s)}
+                      accessibilityLabel={`Rate ${s} out of 10`}
+                      style={({ pressed }) => ({
+                        width: 32,
+                        height: 32,
+                        borderRadius: 12,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginRight: 4,
+                        marginBottom: 4,
+                        backgroundColor:
+                          rating != null && rating >= s
+                            ? "#ffcc00"
+                            : pressed
+                            ? "rgba(0,0,0,0.06)"
+                            : "rgba(0,0,0,0.03)",
+                      })}
+                    >
+                      <ThemedText style={{ fontSize: 18 }}>
+                        {rating != null && rating >= s ? "★" : "☆"}
+                      </ThemedText>
+                    </Pressable>
+                  ))}
+                </ThemedView>
+
+                <ThemedView
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  {(() => {
+                    const current = Array.isArray(questionsData)
+                      ? questionsData[currentIndex]
+                      : null;
+                    const labels = current?.scaleLabels;
+                    if (Array.isArray(labels) && labels.length >= 2) {
+                      const labelForRating =
+                        rating != null &&
+                        Number.isInteger(rating) &&
+                        rating >= 0 &&
+                        rating < labels.length
+                          ? labels[rating]
+                          : null;
+                      return (
+                        <ThemedView
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 8,
+                          }}
+                        >
+                          <ThemedText style={{ color: "#666" }}>
+                            {labels[0]}
+                          </ThemedText>
+                          <ThemedText
+                            style={{ color: "#666", marginHorizontal: 8 }}
+                          >
+                            {rating == null
+                              ? "No rating"
+                              : labelForRating ?? `Selected: ${rating}/10`}
+                          </ThemedText>
+                          <ThemedText style={{ color: "#666" }}>
+                            {labels[1]}
+                          </ThemedText>
+                        </ThemedView>
+                      );
+                    }
+                    return (
+                      <ThemedText style={{ color: "#666" }}>
+                        {rating == null
+                          ? "No rating"
+                          : Array.isArray(labels) &&
+                            Number.isInteger(rating) &&
+                            rating >= 0 &&
+                            rating < labels.length
+                          ? labels[rating]
+                          : `Selected: ${rating}/10`}
+                      </ThemedText>
+                    );
+                  })()}
+
+                  <Pressable
+                    onPress={onNext}
+                    accessibilityLabel="Next question"
+                    style={({ pressed }) => ({
+                      paddingVertical: 10,
+                      paddingHorizontal: 16,
+                      borderRadius: 10,
+                      backgroundColor: "#007AFF",
+                      opacity: pressed ? 0.85 : 1,
+                    })}
+                  >
+                    <ThemedText style={{ color: "#fff", fontWeight: "600" }}>
+                      Log
+                    </ThemedText>
+                  </Pressable>
+                </ThemedView>
+              </ThemedView>
+
+              <ThemedView style={{ paddingVertical: 14, alignItems: "center" }}>
+                <ThemedText style={{ color: "#666" }}>
+                  Question {currentIndex + 1} of {questionList.length}
+                </ThemedText>
+              </ThemedView>
+            </ThemedView>
+          );
+        })()}
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   stepContainer: {
@@ -93,6 +203,6 @@ const styles = StyleSheet.create({
     width: 290,
     bottom: 0,
     left: 0,
-    position: 'absolute',
+    position: "absolute",
   },
 });
