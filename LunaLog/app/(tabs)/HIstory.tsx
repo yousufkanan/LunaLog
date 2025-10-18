@@ -59,6 +59,10 @@ export default function TabTwoScreen() {
         {/* Changed title to "Entries" from your image */}
         <ThemedView style={styles.titleContainer}>
           <ThemedText type="title">Entries</ThemedText>
+
+          <ThemedText type="subtitle">Generally you are happy</ThemedText>
+          
+
         </ThemedView>
 
         <ScrollView>
