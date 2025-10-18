@@ -13,7 +13,7 @@ export default function HomeScreen() {
   const [splashFinished, setSplashFinished] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [rating, setRating] = useState<number | null>(null);
-  const [responses, setResponses] = useState<Record<string, number>>({});
+  const [responses, setResponses] = useState<number[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!splashFinished) {
@@ -61,11 +61,8 @@ export default function HomeScreen() {
 
             setIsSubmitting(true);
 
-            // Add final rating to responses
-            const finalResponses = {
-              ...responses,
-              [(currentIndex + 1).toString()]: rating,
-            };
+            // Add final rating to responses array
+            const finalResponses = [...responses, rating];
 
             console.log("Submitting responses:", finalResponses);
 
@@ -84,7 +81,7 @@ export default function HomeScreen() {
                       // Reset the form
                       setCurrentIndex(0);
                       setRating(null);
-                      setResponses({});
+                      setResponses([]);
                     },
                   },
                 ]
@@ -111,11 +108,8 @@ export default function HomeScreen() {
               return;
             }
 
-            const questionNumber = (currentIndex + 1).toString();
-            setResponses((prev) => ({
-              ...prev,
-              [questionNumber]: rating,
-            }));
+            // Add current rating to responses array
+            setResponses((prev) => [...prev, rating]);
 
             setRating(null);
             setCurrentIndex((i) => i + 1);
