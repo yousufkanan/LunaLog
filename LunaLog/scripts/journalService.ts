@@ -1,8 +1,8 @@
-const API_BASE_URL = "http://10.77.160.152:3000"; // Replace with your actual API URL
+const API_BASE_URL = "http://10.77.160.152:8000"; // Replace with your actual API URL
 
 // Submit journal entry
 export async function submitJournalEntry(
-  responses: Record<string, number>
+  questionValues: number[]
 ): Promise<boolean> {
   try {
     const response = await fetch(`${API_BASE_URL}/submit`, {
@@ -10,7 +10,7 @@ export async function submitJournalEntry(
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(responses),
+      body: JSON.stringify({ questionValues }),
     });
 
     if (!response.ok) {
