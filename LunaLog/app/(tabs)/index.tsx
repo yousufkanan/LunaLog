@@ -7,6 +7,7 @@ import React, { useState } from "react";
 import { View } from "react-native";
 import AnimatedSplashScreen from "../../components/AnimatedSplashScreen";
 import { Pressable } from "react-native";
+import { MoonRatingInput } from "@/components/MoonRatingInput";
 const questionsData: any = require("../../assets/questions.json");
 
 export default function HomeScreen() {
@@ -79,67 +80,12 @@ export default function HomeScreen() {
                   {question}
                 </ThemedText>
 
-                <ThemedView
-                  style={{
-                    flexDirection: "row",
-                    flexWrap: "wrap",
-                    marginBottom: 12,
-                  }}
-                >
-                  {(() => {
-                    const moonImages = [
-                      require("../../assets/moonRatings/1.png"),
-                      require("../../assets/moonRatings/2.png"),
-                      require("../../assets/moonRatings/3.png"),
-                      require("../../assets/moonRatings/4.png"),
-                      require("../../assets/moonRatings/5.png"),
-                      require("../../assets/moonRatings/6.png"),
-                      require("../../assets/moonRatings/7.png"),
-                      require("../../assets/moonRatings/8.png"),
-                      require("../../assets/moonRatings/9.png"),
-                      require("../../assets/moonRatings/10.png"),
-                    ];
-
-                    return stars.map((s) => {
-                      const idx = s - 1;
-                      const selected = rating != null && rating >= s;
-                      const exactSelected = rating === s;
-                      return (
-                        <Pressable
-                          key={s}
-                          onPress={() => setRating(s)}
-                          accessibilityLabel={`Rate ${s} out of 10`}
-                          style={({ pressed }) => ({
-                            width: 32,
-                            height: 32,
-                            borderRadius: 12,
-                            alignItems: "center",
-                            justifyContent: "center",
-                            marginRight: 3,
-                            marginBottom: 6,
-                            backgroundColor: pressed
-                              ? "rgba(0,0,0,0.06)"
-                              : "transparent",
-                            borderWidth: exactSelected ? 2 : 0,
-                            borderColor: exactSelected
-                              ? "#ffcc00"
-                              : "transparent",
-                          })}
-                        >
-                          <Image
-                            source={moonImages[idx]}
-                            style={{
-                              width: 32,
-                              height: 32,
-                              resizeMode: "contain",
-                              opacity: selected ? 1 : 0.45,
-                            }}
-                          />
-                        </Pressable>
-                      );
-                    });
-                  })()}
-                </ThemedView>
+                <MoonRatingInput
+                  rating={rating}
+                  onRatingChange={setRating}
+                  style={{ marginBottom: 24 }}
+                />
+              
 
                 <ThemedView
                   style={{
