@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC } from "react";
 import {
   View,
   Pressable,
@@ -8,7 +8,7 @@ import {
   ViewStyle,
   ImageSourcePropType,
   PressableStateCallbackType,
-} from 'react-native';
+} from "react-native";
 // If 'ThemedView' is a custom component, you would import it and its props
 // import { ThemedView } from './path/to/ThemedView';
 
@@ -17,16 +17,16 @@ import {
 // An array of all the required moon images
 // We explicitly type this as an array of ImageSourcePropType
 const MOON_IMAGES: ImageSourcePropType[] = [
-  require("../../assets/moonRatings/1.png"),
-  require("../../assets/moonRatings/2.png"),
-  require("../../assets/moonRatings/3.png"),
-  require("../../assets/moonRatings/4.png"),
-  require("../../assets/moonRatings/5.png"),
-  require("../../assets/moonRatings/6.png"),
-  require("../../assets/moonRatings/7.png"),
-  require("../../assets/moonRatings/8.png"),
-  require("../../assets/moonRatings/9.png"),
-  require("../../assets/moonRatings/10.png"),
+  require("../assets/moonRatings/1.png"),
+  require("../assets/moonRatings/2.png"),
+  require("../assets/moonRatings/3.png"),
+  require("../assets/moonRatings/4.png"),
+  require("../assets/moonRatings/5.png"),
+  require("../assets/moonRatings/6.png"),
+  require("../assets/moonRatings/7.png"),
+  require("../assets/moonRatings/8.png"),
+  require("../assets/moonRatings/9.png"),
+  require("../assets/moonRatings/10.png"),
 ];
 
 // TypeScript infers this as number[] correctly, no explicit type needed
@@ -69,9 +69,7 @@ export const MoonRatingInput: FC<MoonRatingInputProps> = ({
             style={({ pressed }: PressableStateCallbackType) => [
               styles.pressable,
               {
-                backgroundColor: pressed
-                  ? "rgba(0,0,0,0.06)"
-                  : "transparent",
+                backgroundColor: pressed ? "rgba(0,0,0,0.06)" : "transparent",
                 borderWidth: exactSelected ? 2 : 0,
                 borderColor: exactSelected
                   ? "#ffcc00" // Gold color for exact selection
@@ -102,13 +100,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   pressable: {
-    width: 40,
-    height: 40,
+    width: 32,
+    height: 32,
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 6,
-    marginBottom: 6,
+    marginRight: 4,
+    marginBottom: 4,
   },
   image: {
     width: 32,

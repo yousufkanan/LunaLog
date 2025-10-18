@@ -1,19 +1,20 @@
-import { Image } from "expo-image";
-import { Platform, ScrollView, StyleSheet } from "react-native";
+import { Alert, Platform, ScrollView, StyleSheet } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import React, { useState } from "react";
-import { View } from "react-native";
 import AnimatedSplashScreen from "../../components/AnimatedSplashScreen";
 import { Pressable } from "react-native";
 import { MoonRatingInput } from "@/components/MoonRatingInput";
+import { submitJournalEntry } from "@/scripts/journalService";
 const questionsData: any = require("../../assets/questions.json");
 
 export default function HomeScreen() {
   const [splashFinished, setSplashFinished] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [rating, setRating] = useState<number | null>(null);
+  const [responses, setResponses] = useState<Record<string, number>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!splashFinished) {
     return <AnimatedSplashScreen onFinish={() => setSplashFinished(true)} />;
@@ -49,23 +50,78 @@ export default function HomeScreen() {
           const stars = Array.from({ length: 10 }, (_, i) => i + 1);
           const isLast = currentIndex === questionList.length - 1;
 
-          const onSubmit = () => {
-            console.log("Submitting final rating", {
-              questionIndex: currentIndex,
-              rating,
-            });
+          const onSubmit = async () => {
+            if (rating === null) {
+              Alert.alert(
+                "No Rating",
+                "Please select a rating before submitting."
+              );
+              return;
+            }
+
+            setIsSubmitting(true);
+
+            // Add final rating to responses
+            const finalResponses = {
+              ...responses,
+              [(currentIndex + 1).toString()]: rating,
+            };
+
+            console.log("Submitting responses:", finalResponses);
+
+            const success = await submitJournalEntry(finalResponses);
+
+            setIsSubmitting(false);
+
+            if (success) {
+              Alert.alert(
+                "Success!",
+                "Your journal entry has been submitted.",
+                [
+                  {
+                    text: "OK",
+                    onPress: () => {
+                      // Reset the form
+                      setCurrentIndex(0);
+                      setRating(null);
+                      setResponses({});
+                    },
+                  },
+                ]
+              );
+            } else {
+              Alert.alert(
+                "Error",
+                "Failed to submit your journal entry. Please try again."
+              );
+            }
           };
 
           const onNext = () => {
+            if (rating === null) {
+              Alert.alert(
+                "No Rating",
+                "Please select a rating before continuing."
+              );
+              return;
+            }
+
             if (isLast) {
               onSubmit();
               return;
             }
+
+            const questionNumber = (currentIndex + 1).toString();
+            setResponses((prev) => ({
+              ...prev,
+              [questionNumber]: rating,
+            }));
+
             setRating(null);
             setCurrentIndex((i) => i + 1);
           };
 
-          const question = questionList[currentIndex]?.prompt || "";
+          const question = questionList[currentIndex] || "";
 
           return (
             <ThemedView style={{ flex: 1, justifyContent: "center" }}>
@@ -74,10 +130,14 @@ export default function HomeScreen() {
                   marginHorizontal: 8,
                 }}
               >
+                <ThemedText style={{ fontSize: 20, fontWeight: "600" }}>
+                  {question.prompt}
+                </ThemedText>
+
                 <ThemedText
-                  style={{ fontSize: 20, fontWeight: "600", marginBottom: 12 }}
+                  style={{ fontSize: 14, color: "#666", marginBottom: 12 }}
                 >
-                  {question}
+                  {question.subDescription}
                 </ThemedText>
 
                 <MoonRatingInput
@@ -85,7 +145,6 @@ export default function HomeScreen() {
                   onRatingChange={setRating}
                   style={{ marginBottom: 24 }}
                 />
-              
 
                 <ThemedView
                   style={{
@@ -109,17 +168,24 @@ export default function HomeScreen() {
 
                   <Pressable
                     onPress={onNext}
-                    accessibilityLabel="Next question"
+                    disabled={isSubmitting}
+                    accessibilityLabel={
+                      isLast ? "Submit entry" : "Next question"
+                    }
                     style={({ pressed }) => ({
                       paddingVertical: 10,
                       paddingHorizontal: 16,
                       borderRadius: 10,
-                      backgroundColor: "#007AFF",
+                      backgroundColor: isSubmitting ? "#cccccc" : "#007AFF",
                       opacity: pressed ? 0.85 : 1,
                     })}
                   >
                     <ThemedText style={{ color: "#fff", fontWeight: "600" }}>
-                      {isLast ? "Submit" : "Log"}
+                      {isSubmitting
+                        ? "Submitting..."
+                        : isLast
+                        ? "Submit"
+                        : "Log"}
                     </ThemedText>
                   </Pressable>
                 </ThemedView>
@@ -147,12 +213,5 @@ const styles = StyleSheet.create({
   stepContainer: {
     gap: 8,
     marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: "absolute",
   },
 });
