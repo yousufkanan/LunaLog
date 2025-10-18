@@ -70,10 +70,6 @@ export const MoonRatingInput: FC<MoonRatingInputProps> = ({
               styles.pressable,
               {
                 backgroundColor: pressed ? "rgba(0,0,0,0.06)" : "transparent",
-                borderWidth: exactSelected ? 2 : 0,
-                borderColor: exactSelected
-                  ? "#ffcc00" // Gold color for exact selection
-                  : "transparent",
               },
             ]}
           >
