@@ -4,12 +4,19 @@ import { Platform, ScrollView, StyleSheet } from "react-native";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import React, { useState } from "react";
+import { View } from "react-native";
+import AnimatedSplashScreen from "../../components/AnimatedSplashScreen";
 import { Pressable } from "react-native";
 const questionsData: any = require("../../assets/questions.json");
 const Animated = require("react-native").Animated;
 const { Dimensions } = require("react-native");
 
 export default function HomeScreen() {
+  const [splashFinished, setSplashFinished] = useState(false);
+  if (!splashFinished) {
+        return <AnimatedSplashScreen onFinish={() => setSplashFinished(true)} />;
+      }
+
   return (
     <ThemedView style={{ flex: 1 }}>
       <ThemedView
@@ -206,3 +213,4 @@ const styles = StyleSheet.create({
     position: "absolute",
   },
 });
+}
