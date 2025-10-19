@@ -59,11 +59,29 @@ export default function TabTwoScreen() {
         {/* Changed title to "Entries" from your image */}
         <ThemedView style={styles.titleContainer}>
           <ThemedText type="title">Entries</ThemedText>
-
-          <ThemedText type="subtitle">Generally you are happy</ThemedText>
-          
-
         </ThemedView>
+        <ThemedText
+          type="defaultSemiBold"
+          style={{
+            fontSize: 16,
+            color: "#999",
+            marginTop: 24,
+          }}
+        >
+          AI Overview:
+        </ThemedText>
+        <ThemedText
+          type="default"
+          style={{
+            fontSize: 14,
+            color: "#999",
+
+            marginBottom: 24e,
+          }}
+        >
+          Looking at your recent entries, it seems you're doing well — happy and
+          in good spirits.
+        </ThemedText>
 
         <ScrollView>
           {/* Render JournalEntryCard instances from getJournalEntries */}
