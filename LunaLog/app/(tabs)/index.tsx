@@ -33,7 +33,7 @@ export default function HomeScreen() {
 
   const colorScheme = useColorScheme();
 
-  const welcomeLine1 = "Welcome Back";
+  const welcomeLine1 = "Welcome Back,";
   const welcomeLine2 = "Let's Talk About Your Day";
 
   // Default AI overview lines
@@ -216,8 +216,6 @@ export default function HomeScreen() {
     displayIndex < questionList.length - 1
       ? questionList[displayIndex + 1]
       : null;
-  const prevQuestion = displayIndex > 0 ? questionList[displayIndex - 1] : null;
-  const prevRating = displayIndex > 0 ? responses[displayIndex - 1] : null;
 
   const current = Array.isArray(questionsData)
     ? questionsData[displayIndex]
@@ -240,21 +238,6 @@ export default function HomeScreen() {
     outputRange: [1, 0.88],
   });
 
-  const duplicateTranslateY = slideAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-450, -450],
-  });
-
-  const duplicateOpacity = slideAnim.interpolate({
-    inputRange: [0, 0.3, 0.6, 1],
-    outputRange: [0, 0.15, 0.25, 0.3],
-  });
-
-  const duplicateScale = slideAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.88, 0.82],
-  });
-
   const nextTranslateY = slideAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [600, 0],
@@ -266,22 +249,11 @@ export default function HomeScreen() {
     outputRange: [0.35, 0.5, 0.85, 1],
   });
 
-  const nextScale = slideAnim.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [0.93, 0.97, 1],
-  });
-
   const nextTextOpacity = slideAnim.interpolate({
     inputRange: [0, 0.3, 0.7, 1],
     outputRange: [0.7, 0.8, 0.95, 1],
   });
 
-  const nextScaleX = slideAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.88, 1],
-  });
-
-  const backgroundColor = colorScheme === "dark" ? "#151718" : "#ffffff";
   const gradientColors =
     colorScheme === "dark"
       ? [
@@ -390,134 +362,6 @@ export default function HomeScreen() {
             overflow: "hidden",
           }}
         >
-          {showPrevious && prevQuestion && prevRating !== null && (
-            <Animated.View
-              pointerEvents="none"
-              style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                top: 0,
-                opacity: 0.3,
-                transform: [{ translateY: -450 }, { scale: 0.82 }],
-              }}
-            >
-              <ThemedView
-                style={{
-                  marginHorizontal: 20,
-                  padding: 18,
-                  borderRadius: 16,
-                }}
-              >
-                <ThemedText
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "600",
-                    color: "#888",
-                  }}
-                >
-                  {prevQuestion.prompt}
-                </ThemedText>
-                {prevQuestion.subDescription && (
-                  <ThemedText
-                    style={{
-                      fontSize: 11,
-                      color: "#999",
-                      marginTop: 3,
-                      marginBottom: 6,
-                    }}
-                  >
-                    {prevQuestion.subDescription}
-                  </ThemedText>
-                )}
-
-                <MoonRatingInput
-                  rating={prevRating}
-                  onRatingChange={() => {}}
-                  style={{ marginTop: 6, opacity: 0.4 }}
-                />
-              </ThemedView>
-
-              <LinearGradient
-                colors={topGradientColors}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  borderRadius: 16,
-                }}
-                pointerEvents="none"
-              />
-            </Animated.View>
-          )}
-
-          {isAnimating && (
-            <Animated.View
-              pointerEvents="none"
-              style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                opacity: duplicateOpacity,
-                transform: [
-                  { translateY: duplicateTranslateY },
-                  { scale: duplicateScale },
-                ],
-              }}
-            >
-              <ThemedView
-                style={{
-                  marginHorizontal: 20,
-                  padding: 18,
-                  borderRadius: 16,
-                }}
-              >
-                <ThemedText
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "600",
-                    color: "#888",
-                  }}
-                >
-                  {question.prompt}
-                </ThemedText>
-                {question.subDescription && (
-                  <ThemedText
-                    style={{
-                      fontSize: 11,
-                      color: "#999",
-                      marginTop: 3,
-                      marginBottom: 6,
-                    }}
-                  >
-                    {question.subDescription}
-                  </ThemedText>
-                )}
-
-                <MoonRatingInput
-                  rating={rating}
-                  onRatingChange={() => {}}
-                  style={{ marginTop: 6, opacity: 0.4 }}
-                />
-              </ThemedView>
-
-              <LinearGradient
-                colors={topGradientColors}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  borderRadius: 16,
-                }}
-                pointerEvents="none"
-              />
-            </Animated.View>
-          )}
-
           <Animated.View
             style={{
               position: "absolute",
@@ -531,7 +375,12 @@ export default function HomeScreen() {
             }}
           >
             <ThemedText
-              style={{ fontSize: 22, fontWeight: "700", lineHeight: 30 }}
+              style={{
+                fontSize: 22,
+                fontWeight: "700",
+                lineHeight: 30,
+                paddingLeft: 8,
+              }}
             >
               {question.prompt}
             </ThemedText>
@@ -543,6 +392,7 @@ export default function HomeScreen() {
                 marginTop: 6,
                 marginBottom: 20,
                 lineHeight: 22,
+                paddingLeft: 8,
               }}
             >
               {question.subDescription}
@@ -552,7 +402,7 @@ export default function HomeScreen() {
               <MoonRatingInput
                 rating={rating}
                 onRatingChange={setRating}
-                style={{ marginBottom: 28 }}
+                style={{ marginBottom: 28, justifyContent: "center" }}
               />
             </Animated.View>
 
@@ -617,30 +467,21 @@ export default function HomeScreen() {
               pointerEvents="none"
               style={{
                 position: "absolute",
-                left: 0,
-                right: 0,
+                left: 8,
+                right: 8,
                 opacity: nextOpacity,
-                transform: [
-                  { translateY: nextTranslateY },
-                  { scale: nextScale },
-                  { scaleX: nextScaleX },
-                ],
+                transform: [{ translateY: nextTranslateY }],
               }}
             >
-              <ThemedView
-                style={{
-                  marginHorizontal: 20,
-                  padding: 20,
-                  borderRadius: 16,
-                }}
-              >
+              <ThemedView>
                 <Animated.View style={{ opacity: nextTextOpacity }}>
                   <ThemedText
                     style={{
-                      fontSize: 18,
+                      fontSize: 22,
                       fontWeight: "700",
                       color: colorScheme === "dark" ? "#ccc" : "#444",
-                      lineHeight: 26,
+                      lineHeight: 30,
+                      paddingLeft: 8,
                     }}
                   >
                     {nextQuestion.prompt}
@@ -648,15 +489,24 @@ export default function HomeScreen() {
                   {nextQuestion.subDescription && (
                     <ThemedText
                       style={{
-                        fontSize: 14,
+                        fontSize: 15,
                         color: "#999",
-                        marginTop: 5,
-                        lineHeight: 20,
+                        marginTop: 6,
+                        marginBottom: 20,
+                        lineHeight: 22,
+                        paddingLeft: 8,
                       }}
                     >
                       {nextQuestion.subDescription}
                     </ThemedText>
                   )}
+                  <Animated.View style={{ opacity: moonFadeAnim }}>
+                    <MoonRatingInput
+                      rating={rating}
+                      onRatingChange={setRating}
+                      style={{ marginBottom: 28, justifyContent: "center" }}
+                    />
+                  </Animated.View>
                 </Animated.View>
               </ThemedView>
 
