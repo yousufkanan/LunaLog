@@ -76,7 +76,7 @@ export default function TabTwoScreen() {
             fontSize: 14,
             color: "#999",
 
-            marginBottom: 24e,
+            marginBottom: 24,
           }}
         >
           Looking at your recent entries, it seems you're doing well — happy and
