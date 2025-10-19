@@ -33,6 +33,7 @@ export default function TabTwoScreen() {
       try {
         const data = await getJournalEntries();
         if (mounted) setEntries(Array.isArray(data) ? data : []);
+        console.log("Fetched entries:", entries);
       } catch (e) {
         if (mounted) setEntries([]);
         // optionally log error
@@ -115,12 +116,14 @@ export default function TabTwoScreen() {
         {/* Render JournalEntryCard instances from getJournalEntries */}
         {entries.map((entry) => (
           <JournalEntryCard
-            key={entry.id ?? entry.timestamp ?? Math.random().toString()}
-            title={"Journal Entry #" + (entry.id ?? "")}
-            aiSummary={entry.journalEntry ?? "A brief summary of this entry."}
-            date={humanDate(entry.timestamp)}
+            key={entry.entry_id ?? Math.random().toString()}
+            title={`Journal Entry #${entry.entry_id}`}
+            aiSummary={entry.insights[0] ?? "A brief summary of this entry."}
+            date={humanDate(entry.entry_date)}
             moodScore={
-              typeof entry.moodScore === "number" ? entry.moodScore : 5
+              typeof entry.moodScore === "number"
+                ? Math.round(entry.moodScore)
+                : 5
             }
           />
         ))}

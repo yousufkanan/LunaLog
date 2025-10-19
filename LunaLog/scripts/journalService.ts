@@ -40,7 +40,8 @@ export async function getJournalEntries(): Promise<any> {
     }
 
     const data = await response.json();
-    return data;
+    console.log(data);
+    return data.data;
   } catch (error) {
     console.error("Error fetching journal entries:", error);
     throw error;

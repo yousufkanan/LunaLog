@@ -333,7 +333,8 @@ const styles = StyleSheet.create({
   },
   journalSummary: {
     marginBottom: 12,
-    lineHeight: 20,
+    fontSize: 12,
+    lineHeight: 15,
     color: "#666",
   },
   cardFooter: {
