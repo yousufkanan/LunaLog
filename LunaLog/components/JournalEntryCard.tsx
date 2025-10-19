@@ -47,8 +47,9 @@ export function JournalEntryCard({
 
     /**
      * If the mood Score is over 9 it needs to have a gloweffect to make it stand out more
+     * It needs to glow gold and have a sparkle effect really making it stand out
     */
-   const glowStyle = moodScore > 9 ? { shadowColor: "#06B6D4", shadowRadius: 10, elevation: 5 } : {};
+   const glowStyle = moodScore > 9 ? { shadowColor: "#06B6D4", shadowRadius: 10, elevation: 5 } : {}
 
   return (
     <ThemedView style={[styles.journalCard, { borderColor }]}>
