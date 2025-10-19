@@ -326,7 +326,7 @@ export default function HomeScreen() {
           >
             {typedText1}
             {typedText1.length < welcomeLine1.length && (
-              <ThemedText style={{ color: "#007AFF" }}>|</ThemedText>
+              <ThemedText style={{ color: "#d2d2d2ff" }}>|</ThemedText>
             )}
           </ThemedText>
           {typedText1.length >= welcomeLine1.length && (
@@ -340,7 +340,7 @@ export default function HomeScreen() {
             >
               {typedText2}
               {typedText2.length < welcomeLine2.length && (
-                <ThemedText style={{ color: "#007AFF" }}>|</ThemedText>
+                <ThemedText style={{ color: "#d2d2d2ff" }}>|</ThemedText>
               )}
             </ThemedText>
           )}
