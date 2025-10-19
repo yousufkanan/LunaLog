@@ -10,36 +10,56 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
+type JournalEntry = {
+  entry_id: number;
+  entry_date: string;
+  moodScore: number;
+  insights: string[];
+  recommendations: string[];
+  full_response_text: string;
+};
+
 type AIOverviewScreenProps = {
   onReset: () => void;
-  aiOverviewLines?: string[];
+  entries: JournalEntry[];
 };
 
 export default function AIOverviewScreen({
   onReset,
-  aiOverviewLines = [
-    "• Today's reflection shows a balanced emotional journey with genuine moments of contentment",
-    "• You demonstrated resilience and adaptability when facing challenges that tested your patience",
-    "• Creative tasks and meaningful conversations brought you the most satisfaction",
-    "• Your responses indicate strong self-awareness and emotional intelligence",
-    "• Consider maintaining this reflective practice to support your mental well-being and personal growth",
-  ],
+  entries = [],
 }: AIOverviewScreenProps) {
   const [typedOverviewTitle, setTypedOverviewTitle] = useState("");
   const [showFullText, setShowFullText] = useState(false);
 
   const headerOpacity = useRef(new Animated.Value(0)).current;
   const footerOpacity = useRef(new Animated.Value(0)).current;
+  const insightsHeaderOpacity = useRef(new Animated.Value(0)).current;
+  const recommendationsHeaderOpacity = useRef(new Animated.Value(0)).current;
 
-  // Line-by-line animation refs
+  // Line-by-line animation refs (6 total: 3 insights + 3 recommendations)
   const line1Opacity = useRef(new Animated.Value(0)).current;
   const line2Opacity = useRef(new Animated.Value(0)).current;
   const line3Opacity = useRef(new Animated.Value(0)).current;
   const line4Opacity = useRef(new Animated.Value(0)).current;
   const line5Opacity = useRef(new Animated.Value(0)).current;
+  const line6Opacity = useRef(new Animated.Value(0)).current;
 
   const colorScheme = useColorScheme();
   const overviewTitle = "AI Overview";
+
+  // Get the latest entry by sorting by entry_date (UNIX timestamp)
+  const latestEntry =
+    entries.length > 0
+      ? entries.reduce((latest, current) => {
+          const latestTime = parseInt(latest.entry_date);
+          const currentTime = parseInt(current.entry_date);
+          return currentTime > latestTime ? current : latest;
+        })
+      : null;
+
+  // Build the overview data from insights and recommendations
+  const insightsList = latestEntry?.insights?.slice(0, 3) || [];
+  const recommendationsList = latestEntry?.recommendations?.slice(0, 3) || [];
 
   // Typing effect for AI Overview title
   useEffect(() => {
@@ -75,19 +95,62 @@ export default function AIOverviewScreen({
       line3Opacity,
       line4Opacity,
       line5Opacity,
+      line6Opacity,
     ];
 
-    // Animate each line sequentially
-    Animated.stagger(
-      500,
-      lineOpacities.slice(0, aiOverviewLines.length).map((opacity) =>
-        Animated.timing(opacity, {
+    const totalLines = insightsList.length + recommendationsList.length;
+    const hasInsights = insightsList.length > 0;
+    const hasRecommendations = recommendationsList.length > 0;
+
+    // Build animation sequence
+    const animations = [];
+
+    // Show Insights header
+    if (hasInsights) {
+      animations.push(
+        Animated.timing(insightsHeaderOpacity, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        })
+      );
+    }
+
+    // Show insight lines
+    insightsList.forEach((_, index) => {
+      animations.push(
+        Animated.timing(lineOpacities[index], {
           toValue: 1,
           duration: 700,
           useNativeDriver: true,
         })
-      )
-    ).start(() => {
+      );
+    });
+
+    // Show Recommendations header
+    if (hasRecommendations) {
+      animations.push(
+        Animated.timing(recommendationsHeaderOpacity, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        })
+      );
+    }
+
+    // Show recommendation lines
+    recommendationsList.forEach((_, index) => {
+      animations.push(
+        Animated.timing(lineOpacities[insightsList.length + index], {
+          toValue: 1,
+          duration: 700,
+          useNativeDriver: true,
+        })
+      );
+    });
+
+    // Animate with stagger
+    Animated.stagger(400, animations).start(() => {
       // After all lines fade in, show the footer
       Animated.timing(footerOpacity, {
         toValue: 1,
@@ -95,7 +158,7 @@ export default function AIOverviewScreen({
         useNativeDriver: true,
       }).start();
     });
-  }, [showFullText, aiOverviewLines.length]);
+  }, [showFullText, insightsList.length, recommendationsList.length]);
 
   const lineOpacities = [
     line1Opacity,
@@ -103,6 +166,7 @@ export default function AIOverviewScreen({
     line3Opacity,
     line4Opacity,
     line5Opacity,
+    line6Opacity,
   ];
 
   return (
@@ -154,26 +218,129 @@ export default function AIOverviewScreen({
             paddingHorizontal: 4,
           }}
         >
-          {aiOverviewLines.map((line, index) => (
-            <Animated.View
-              key={index}
-              style={{
-                opacity: lineOpacities[index] || 0,
-                marginBottom: 20,
-              }}
-            >
+          {latestEntry ? (
+            <>
+              {/* Insights Section */}
+              {insightsList.length > 0 && (
+                <>
+                  <Animated.View
+                    style={{ opacity: insightsHeaderOpacity, marginBottom: 16 }}
+                  >
+                    <ThemedText
+                      style={{
+                        fontSize: 20,
+                        fontWeight: "700",
+                        color: colorScheme === "dark" ? "#fff" : "#000",
+                      }}
+                    >
+                      Key Insights
+                    </ThemedText>
+                  </Animated.View>
+
+                  {insightsList.map((insight, index) => (
+                    <Animated.View
+                      key={`insight-${index}`}
+                      style={{
+                        opacity: lineOpacities[index] || 0,
+                        marginBottom: 20,
+                      }}
+                    >
+                      <ThemedText
+                        style={{
+                          fontSize: 17,
+                          lineHeight: 28,
+                          color: colorScheme === "dark" ? "#ccc" : "#444",
+                          textAlign: "left",
+                        }}
+                      >
+                        • {insight}
+                      </ThemedText>
+                    </Animated.View>
+                  ))}
+                </>
+              )}
+
+              {/* Recommendations Section */}
+              {recommendationsList.length > 0 && (
+                <>
+                  <Animated.View
+                    style={{
+                      opacity: recommendationsHeaderOpacity,
+                      marginTop: 24,
+                      marginBottom: 16,
+                    }}
+                  >
+                    <ThemedText
+                      style={{
+                        fontSize: 20,
+                        fontWeight: "700",
+                        color: colorScheme === "dark" ? "#fff" : "#000",
+                      }}
+                    >
+                      Recommendations
+                    </ThemedText>
+                  </Animated.View>
+
+                  {recommendationsList.map((recommendation, index) => (
+                    <Animated.View
+                      key={`recommendation-${index}`}
+                      style={{
+                        opacity:
+                          lineOpacities[insightsList.length + index] || 0,
+                        marginBottom: 20,
+                      }}
+                    >
+                      <ThemedText
+                        style={{
+                          fontSize: 17,
+                          lineHeight: 28,
+                          color: colorScheme === "dark" ? "#ccc" : "#444",
+                          textAlign: "left",
+                        }}
+                      >
+                        • {recommendation}
+                      </ThemedText>
+                    </Animated.View>
+                  ))}
+                </>
+              )}
+            </>
+          ) : (
+            <ThemedView>
               <ThemedText
                 style={{
                   fontSize: 17,
                   lineHeight: 28,
                   color: colorScheme === "dark" ? "#ccc" : "#444",
-                  textAlign: "left",
+                  textAlign: "center",
+                  marginBottom: 20,
                 }}
               >
-                {line}
+                • No journal entries yet
               </ThemedText>
-            </Animated.View>
-          ))}
+              <ThemedText
+                style={{
+                  fontSize: 17,
+                  lineHeight: 28,
+                  color: colorScheme === "dark" ? "#ccc" : "#444",
+                  textAlign: "center",
+                  marginBottom: 20,
+                }}
+              >
+                • Complete your first entry to see AI insights
+              </ThemedText>
+              <ThemedText
+                style={{
+                  fontSize: 17,
+                  lineHeight: 28,
+                  color: colorScheme === "dark" ? "#ccc" : "#444",
+                  textAlign: "center",
+                }}
+              >
+                • Track your mood and emotional patterns
+              </ThemedText>
+            </ThemedView>
+          )}
         </ThemedView>
 
         {/* Footer */}

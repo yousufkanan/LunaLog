@@ -10,6 +10,7 @@ import { MoonRatingInput } from "@/components/MoonRatingInput";
 import { submitJournalEntry } from "@/scripts/journalService";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import AIOverviewScreen from "@/components/aioverview";
+import { getJournalEntries } from "@/scripts/journalService";
 const questionsData: any = require("../../assets/questions.json");
 
 export default function HomeScreen() {
@@ -30,20 +31,22 @@ export default function HomeScreen() {
   const moonFadeAnim = useRef(new Animated.Value(1)).current;
   const buttonScale = useRef(new Animated.Value(1)).current;
   const welcomeOpacity = useRef(new Animated.Value(1)).current;
+  const [entries, setEntries] = useState<any[]>([]);
 
   const colorScheme = useColorScheme();
 
   const welcomeLine1 = "Welcome Back,";
   const welcomeLine2 = "Let's Talk About Your Day";
 
-  // Default AI overview lines
-  const aiOverviewLines = [
-    "• Today's reflection shows a balanced emotional journey with genuine moments of contentment",
-    "• You demonstrated resilience and adaptability when facing challenges that tested your patience",
-    "• Creative tasks and meaningful conversations brought you the most satisfaction",
-    "• Your responses indicate strong self-awareness and emotional intelligence",
-    "• Consider maintaining this reflective practice to support your mental well-being and personal growth",
-  ];
+  const fetchEntries = async () => {
+    try {
+      const data = await getJournalEntries();
+      setEntries(Array.isArray(data) ? data : []);
+    } catch (e) {
+      setEntries([]);
+      // optionally log error
+    }
+  };
 
   // Typing animation effect for welcome
   useEffect(() => {
@@ -101,6 +104,7 @@ export default function HomeScreen() {
     setIsSubmitting(false);
 
     if (success) {
+      fetchEntries();
       // Show AI Overview screen
       setShowAIOverview(true);
     } else {
@@ -203,12 +207,7 @@ export default function HomeScreen() {
 
   // Show AI Overview Screen
   if (showAIOverview) {
-    return (
-      <AIOverviewScreen
-        onReset={resetToStart}
-        aiOverviewLines={aiOverviewLines}
-      />
-    );
+    return <AIOverviewScreen onReset={resetToStart} entries={entries} />;
   }
 
   const question = questionList[displayIndex] || {};
