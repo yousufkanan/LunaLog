@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Image } from "expo-image";
-import { Platform, StyleSheet } from "react-native";
+import { Platform, StyleSheet, RefreshControl, ScrollView } from "react-native";
 import { Collapsible } from "@/components/ui/collapsible";
 import { ExternalLink } from "@/components/external-link";
 import ParallaxScrollView from "@/components/parallax-scroll-view";
@@ -10,10 +10,22 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Fonts } from "@/constants/theme";
 import { JournalEntryCard } from "@/components/JournalEntryCard";
 import { getJournalEntries } from "@/scripts/journalService";
-import { ScrollView } from "react-native";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 
 export default function TabTwoScreen() {
   const [entries, setEntries] = useState<any[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const colorScheme = useColorScheme();
+
+  const fetchEntries = async () => {
+    try {
+      const data = await getJournalEntries();
+      setEntries(Array.isArray(data) ? data : []);
+    } catch (e) {
+      setEntries([]);
+      // optionally log error
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -31,18 +43,22 @@ export default function TabTwoScreen() {
     };
   }, []);
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchEntries();
+    setRefreshing(false);
+  };
+
   const humanDate = (ts: any) => {
     if (ts === undefined || ts === null || ts === "") return "";
     const asNumber = typeof ts === "number" ? ts : Number(ts);
     let date: Date;
-
     if (!isNaN(asNumber)) {
       const ms = asNumber < 1e12 ? asNumber * 1000 : asNumber;
       date = new Date(ms);
     } else {
       date = new Date(String(ts));
     }
-
     if (isNaN(date.getTime())) return String(ts);
     return date.toLocaleDateString();
   };
@@ -75,32 +91,44 @@ export default function TabTwoScreen() {
           style={{
             fontSize: 14,
             color: "#999",
-
             marginBottom: 24,
           }}
         >
           Looking at your recent entries, it seems you're doing well — happy and
           in good spirits.
         </ThemedText>
-
-        <ScrollView>
-          {/* Render JournalEntryCard instances from getJournalEntries */}
-          {entries.map((entry) => (
-            <JournalEntryCard
-              key={entry.id ?? entry.timestamp ?? Math.random().toString()}
-              title={"Journal Entry #" + (entry.id ?? "")}
-              aiSummary={entry.journalEntry ?? "A brief summary of this entry."}
-              date={humanDate(entry.timestamp)}
-              moodScore={
-                typeof entry.moodScore === "number" ? entry.moodScore : 5
-              }
-            />
-          ))}
-        </ScrollView>
       </ThemedView>
+
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colorScheme === "dark" ? "#fff" : "#000"}
+            colors={["#007AFF"]} // Android
+            progressBackgroundColor={colorScheme === "dark" ? "#333" : "#fff"} // Android
+          />
+        }
+      >
+        {/* Render JournalEntryCard instances from getJournalEntries */}
+        {entries.map((entry) => (
+          <JournalEntryCard
+            key={entry.id ?? entry.timestamp ?? Math.random().toString()}
+            title={"Journal Entry #" + (entry.id ?? "")}
+            aiSummary={entry.journalEntry ?? "A brief summary of this entry."}
+            date={humanDate(entry.timestamp)}
+            moodScore={
+              typeof entry.moodScore === "number" ? entry.moodScore : 5
+            }
+          />
+        ))}
+      </ScrollView>
     </ThemedView>
   );
 }
+
 const styles = StyleSheet.create({
   headerImage: {
     color: "#808080",

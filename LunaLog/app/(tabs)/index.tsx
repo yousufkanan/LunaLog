@@ -3,12 +3,13 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import AnimatedSplashScreen from "../../components/AnimatedSplashScreen";
 import { Pressable } from "react-native";
 import { MoonRatingInput } from "@/components/MoonRatingInput";
 import { submitJournalEntry } from "@/scripts/journalService";
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import AIOverviewScreen from "@/components/aioverview";
 const questionsData: any = require("../../assets/questions.json");
 
 export default function HomeScreen() {
@@ -20,9 +21,57 @@ export default function HomeScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showPrevious, setShowPrevious] = useState(false);
+  const [typedText1, setTypedText1] = useState("");
+  const [typedText2, setTypedText2] = useState("");
+  const [showWelcome, setShowWelcome] = useState(true);
+  const [showAIOverview, setShowAIOverview] = useState(false);
 
   const slideAnim = useRef(new Animated.Value(0)).current;
+  const moonFadeAnim = useRef(new Animated.Value(1)).current;
+  const buttonScale = useRef(new Animated.Value(1)).current;
+  const welcomeOpacity = useRef(new Animated.Value(1)).current;
+
   const colorScheme = useColorScheme();
+
+  const welcomeLine1 = "Welcome Back";
+  const welcomeLine2 = "Let's Talk About Your Day";
+
+  // Default AI overview lines
+  const aiOverviewLines = [
+    "• Today's reflection shows a balanced emotional journey with genuine moments of contentment",
+    "• You demonstrated resilience and adaptability when facing challenges that tested your patience",
+    "• Creative tasks and meaningful conversations brought you the most satisfaction",
+    "• Your responses indicate strong self-awareness and emotional intelligence",
+    "• Consider maintaining this reflective practice to support your mental well-being and personal growth",
+  ];
+
+  // Typing animation effect for welcome
+  useEffect(() => {
+    if (!splashFinished || !showWelcome) return;
+
+    let index1 = 0;
+    const typingInterval1 = setInterval(() => {
+      if (index1 <= welcomeLine1.length) {
+        setTypedText1(welcomeLine1.slice(0, index1));
+        index1++;
+      } else {
+        clearInterval(typingInterval1);
+        let index2 = 0;
+        const typingInterval2 = setInterval(() => {
+          if (index2 <= welcomeLine2.length) {
+            setTypedText2(welcomeLine2.slice(0, index2));
+            index2++;
+          } else {
+            clearInterval(typingInterval2);
+          }
+        }, 40);
+      }
+    }, 60);
+
+    return () => {
+      clearInterval(typingInterval1);
+    };
+  }, [splashFinished, showWelcome]);
 
   if (!splashFinished) {
     return <AnimatedSplashScreen onFinish={() => setSplashFinished(true)} />;
@@ -52,19 +101,8 @@ export default function HomeScreen() {
     setIsSubmitting(false);
 
     if (success) {
-      Alert.alert("Success!", "Your journal entry has been submitted.", [
-        {
-          text: "OK",
-          onPress: () => {
-            setCurrentIndex(0);
-            setDisplayIndex(0);
-            setRating(null);
-            setResponses([]);
-            slideAnim.setValue(0);
-            setShowPrevious(false);
-          },
-        },
-      ]);
+      // Show AI Overview screen
+      setShowAIOverview(true);
     } else {
       Alert.alert(
         "Error",
@@ -73,10 +111,53 @@ export default function HomeScreen() {
     }
   };
 
+  const resetToStart = () => {
+    setShowAIOverview(false);
+    setCurrentIndex(0);
+    setDisplayIndex(0);
+    setRating(null);
+    setResponses([]);
+    slideAnim.setValue(0);
+    moonFadeAnim.setValue(1);
+    setShowPrevious(false);
+    setShowWelcome(true);
+    setTypedText1("");
+    setTypedText2("");
+    welcomeOpacity.setValue(1);
+  };
+
   const onNext = () => {
     if (rating === null) {
+      Animated.sequence([
+        Animated.timing(buttonScale, {
+          toValue: 1.1,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(buttonScale, {
+          toValue: 0.95,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(buttonScale, {
+          toValue: 1,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+      ]).start();
+
       Alert.alert("No Rating", "Please select a rating before continuing.");
       return;
+    }
+
+    if (currentIndex === 0 && showWelcome) {
+      Animated.timing(welcomeOpacity, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }).start(() => {
+        setShowWelcome(false);
+      });
     }
 
     if (isLast) {
@@ -88,21 +169,47 @@ export default function HomeScreen() {
 
     setResponses((prev) => [...prev, rating]);
     setIsAnimating(true);
-    setShowPrevious(true); // Show previous question at top
+    setShowPrevious(true);
+
+    Animated.timing(moonFadeAnim, {
+      toValue: 0,
+      duration: 200,
+      easing: Easing.in(Easing.ease),
+      useNativeDriver: true,
+    }).start();
 
     Animated.timing(slideAnim, {
       toValue: 1,
-      duration: 500,
-      easing: Easing.out(Easing.cubic),
+      duration: 600,
+      easing: Easing.bezier(0.4, 0.0, 0.2, 1),
       useNativeDriver: true,
     }).start(() => {
       setCurrentIndex((i) => i + 1);
       setDisplayIndex((i) => i + 1);
       setRating(null);
       slideAnim.setValue(0);
-      setIsAnimating(false);
+
+      Animated.timing(moonFadeAnim, {
+        toValue: 1,
+        duration: 500,
+        delay: 100,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start(() => {
+        setIsAnimating(false);
+      });
     });
   };
+
+  // Show AI Overview Screen
+  if (showAIOverview) {
+    return (
+      <AIOverviewScreen
+        onReset={resetToStart}
+        aiOverviewLines={aiOverviewLines}
+      />
+    );
+  }
 
   const question = questionList[displayIndex] || {};
   const nextQuestion =
@@ -117,50 +224,97 @@ export default function HomeScreen() {
     : null;
   const labels = current?.scaleLabels;
 
-  // Current question moves up
   const currentTranslateY = slideAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, -250],
+    outputRange: [0, -450],
+    extrapolate: "clamp",
   });
 
   const currentOpacity = slideAnim.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [1, 0.3, 0],
+    inputRange: [0, 0.25, 0.5],
+    outputRange: [1, 0.6, 0],
   });
 
-  // Duplicate (becomes previous) - instantly appears at top as current fades
+  const currentScale = slideAnim.interpolate({
+    inputRange: [0, 0.5],
+    outputRange: [1, 0.88],
+  });
+
   const duplicateTranslateY = slideAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [-250, -250], // Stays at top
+    outputRange: [-450, -450],
   });
 
   const duplicateOpacity = slideAnim.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [0, 0.3, 0.3], // Fades in as current fades out
+    inputRange: [0, 0.3, 0.6, 1],
+    outputRange: [0, 0.15, 0.25, 0.3],
   });
 
-  // Next question moves from bottom to center
+  const duplicateScale = slideAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.88, 0.82],
+  });
+
   const nextTranslateY = slideAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [250, 0],
+    outputRange: [600, 0],
+    extrapolate: "clamp",
   });
 
   const nextOpacity = slideAnim.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [0.4, 0.7, 1],
+    inputRange: [0, 0.2, 0.6, 1],
+    outputRange: [0.35, 0.5, 0.85, 1],
   });
 
-  // Get background colors based on theme
+  const nextScale = slideAnim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0.93, 0.97, 1],
+  });
+
+  const nextTextOpacity = slideAnim.interpolate({
+    inputRange: [0, 0.3, 0.7, 1],
+    outputRange: [0.7, 0.8, 0.95, 1],
+  });
+
+  const nextScaleX = slideAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.88, 1],
+  });
+
   const backgroundColor = colorScheme === "dark" ? "#151718" : "#ffffff";
   const gradientColors =
     colorScheme === "dark"
-      ? ["rgba(21,23,24,0)", "rgba(21,23,24,0.7)", "rgba(21,23,24,1)"]
-      : ["rgba(255,255,255,0)", "rgba(255,255,255,0.7)", "rgba(255,255,255,1)"];
+      ? [
+          "rgba(21,23,24,0)",
+          "rgba(21,23,24,0.4)",
+          "rgba(21,23,24,0.75)",
+          "rgba(21,23,24,0.95)",
+          "rgba(21,23,24,1)",
+        ]
+      : [
+          "rgba(255,255,255,0)",
+          "rgba(255,255,255,0.4)",
+          "rgba(255,255,255,0.75)",
+          "rgba(255,255,255,0.95)",
+          "rgba(255,255,255,1)",
+        ];
 
   const topGradientColors =
     colorScheme === "dark"
-      ? ["rgba(21,23,24,1)", "rgba(21,23,24,0.7)", "rgba(21,23,24,0)"]
-      : ["rgba(255,255,255,1)", "rgba(255,255,255,0.7)", "rgba(255,255,255,0)"];
+      ? [
+          "rgba(21,23,24,1)",
+          "rgba(21,23,24,0.95)",
+          "rgba(21,23,24,0.75)",
+          "rgba(21,23,24,0.4)",
+          "rgba(21,23,24,0)",
+        ]
+      : [
+          "rgba(255,255,255,1)",
+          "rgba(255,255,255,0.95)",
+          "rgba(255,255,255,0.75)",
+          "rgba(255,255,255,0.4)",
+          "rgba(255,255,255,0)",
+        ];
 
   return (
     <ThemedView style={{ flex: 1 }}>
@@ -176,6 +330,52 @@ export default function HomeScreen() {
         </ThemedView>
       </ThemedView>
 
+      {showWelcome && (
+        <Animated.View
+          style={{
+            position: "absolute",
+            top: Platform.OS === "android" ? 130 : 150,
+            left: 0,
+            right: 0,
+            alignItems: "center",
+            opacity: welcomeOpacity,
+            zIndex: 10,
+          }}
+          pointerEvents="none"
+        >
+          <ThemedText
+            style={{
+              fontSize: 42,
+              fontWeight: "800",
+              textAlign: "center",
+              color: colorScheme === "dark" ? "#fff" : "#000",
+              marginBottom: 8,
+              paddingTop: 24,
+            }}
+          >
+            {typedText1}
+            {typedText1.length < welcomeLine1.length && (
+              <ThemedText style={{ color: "#007AFF" }}>|</ThemedText>
+            )}
+          </ThemedText>
+          {typedText1.length >= welcomeLine1.length && (
+            <ThemedText
+              style={{
+                fontSize: 20,
+                fontWeight: "600",
+                textAlign: "center",
+                color: colorScheme === "dark" ? "#aaa" : "#666",
+              }}
+            >
+              {typedText2}
+              {typedText2.length < welcomeLine2.length && (
+                <ThemedText style={{ color: "#007AFF" }}>|</ThemedText>
+              )}
+            </ThemedText>
+          )}
+        </Animated.View>
+      )}
+
       <ThemedView
         style={{
           flex: 1,
@@ -190,7 +390,6 @@ export default function HomeScreen() {
             overflow: "hidden",
           }}
         >
-          {/* Previous Question - Static at top */}
           {showPrevious && prevQuestion && prevRating !== null && (
             <Animated.View
               pointerEvents="none"
@@ -200,21 +399,21 @@ export default function HomeScreen() {
                 right: 0,
                 top: 0,
                 opacity: 0.3,
-                transform: [{ translateY: -250 }],
+                transform: [{ translateY: -450 }, { scale: 0.82 }],
               }}
             >
               <ThemedView
                 style={{
                   marginHorizontal: 20,
-                  padding: 20,
-                  borderRadius: 12,
+                  padding: 18,
+                  borderRadius: 16,
                 }}
               >
                 <ThemedText
                   style={{
-                    fontSize: 16,
-                    fontWeight: "500",
-                    color: "#666",
+                    fontSize: 14,
+                    fontWeight: "600",
+                    color: "#888",
                   }}
                 >
                   {prevQuestion.prompt}
@@ -222,10 +421,10 @@ export default function HomeScreen() {
                 {prevQuestion.subDescription && (
                   <ThemedText
                     style={{
-                      fontSize: 12,
+                      fontSize: 11,
                       color: "#999",
-                      marginTop: 4,
-                      marginBottom: 8,
+                      marginTop: 3,
+                      marginBottom: 6,
                     }}
                   >
                     {prevQuestion.subDescription}
@@ -235,7 +434,7 @@ export default function HomeScreen() {
                 <MoonRatingInput
                   rating={prevRating}
                   onRatingChange={() => {}}
-                  style={{ marginTop: 8, opacity: 0.5 }}
+                  style={{ marginTop: 6, opacity: 0.4 }}
                 />
               </ThemedView>
 
@@ -247,14 +446,13 @@ export default function HomeScreen() {
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  borderRadius: 12,
+                  borderRadius: 16,
                 }}
                 pointerEvents="none"
               />
             </Animated.View>
           )}
 
-          {/* Duplicate of Current Question - transitions to become previous */}
           {isAnimating && (
             <Animated.View
               pointerEvents="none"
@@ -263,21 +461,24 @@ export default function HomeScreen() {
                 left: 0,
                 right: 0,
                 opacity: duplicateOpacity,
-                transform: [{ translateY: duplicateTranslateY }],
+                transform: [
+                  { translateY: duplicateTranslateY },
+                  { scale: duplicateScale },
+                ],
               }}
             >
               <ThemedView
                 style={{
                   marginHorizontal: 20,
-                  padding: 20,
-                  borderRadius: 12,
+                  padding: 18,
+                  borderRadius: 16,
                 }}
               >
                 <ThemedText
                   style={{
-                    fontSize: 16,
-                    fontWeight: "500",
-                    color: "#666",
+                    fontSize: 14,
+                    fontWeight: "600",
+                    color: "#888",
                   }}
                 >
                   {question.prompt}
@@ -285,10 +486,10 @@ export default function HomeScreen() {
                 {question.subDescription && (
                   <ThemedText
                     style={{
-                      fontSize: 12,
+                      fontSize: 11,
                       color: "#999",
-                      marginTop: 4,
-                      marginBottom: 8,
+                      marginTop: 3,
+                      marginBottom: 6,
                     }}
                   >
                     {question.subDescription}
@@ -298,7 +499,7 @@ export default function HomeScreen() {
                 <MoonRatingInput
                   rating={rating}
                   onRatingChange={() => {}}
-                  style={{ marginTop: 8, opacity: 0.5 }}
+                  style={{ marginTop: 6, opacity: 0.4 }}
                 />
               </ThemedView>
 
@@ -310,71 +511,107 @@ export default function HomeScreen() {
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  borderRadius: 12,
+                  borderRadius: 16,
                 }}
                 pointerEvents="none"
               />
             </Animated.View>
           )}
 
-          {/* Current Question - moves up */}
           <Animated.View
             style={{
               position: "absolute",
               left: 8,
               right: 8,
               opacity: currentOpacity,
-              transform: [{ translateY: currentTranslateY }],
+              transform: [
+                { translateY: currentTranslateY },
+                { scale: currentScale },
+              ],
             }}
           >
-            <ThemedText style={{ fontSize: 20, fontWeight: "600" }}>
+            <ThemedText
+              style={{ fontSize: 22, fontWeight: "700", lineHeight: 30 }}
+            >
               {question.prompt}
             </ThemedText>
 
             <ThemedText
-              style={{ fontSize: 14, color: "#666", marginBottom: 12 }}
+              style={{
+                fontSize: 15,
+                color: "#888",
+                marginTop: 6,
+                marginBottom: 20,
+                lineHeight: 22,
+              }}
             >
               {question.subDescription}
             </ThemedText>
 
-            <MoonRatingInput
-              rating={rating}
-              onRatingChange={setRating}
-              style={{ marginBottom: 24 }}
-            />
+            <Animated.View style={{ opacity: moonFadeAnim }}>
+              <MoonRatingInput
+                rating={rating}
+                onRatingChange={setRating}
+                style={{ marginBottom: 28 }}
+              />
+            </Animated.View>
 
             <ThemedView
               style={{
                 flexDirection: "row",
                 justifyContent: "space-between",
                 alignItems: "center",
+                gap: 16,
               }}
             >
-              <ThemedText style={{ color: "#666" }}>
-                {rating == null ? "No rating" : labels?.[rating] || ""}
+              <ThemedText
+                style={{
+                  color: "#888",
+                  fontSize: 14,
+                  flex: 1,
+                  fontWeight: "500",
+                }}
+              >
+                {rating == null ? "Select a mood" : labels?.[rating] || ""}
               </ThemedText>
 
-              <Pressable
-                onPress={onNext}
-                disabled={isSubmitting || isAnimating}
-                accessibilityLabel={isLast ? "Submit entry" : "Next question"}
-                style={({ pressed }) => ({
-                  paddingVertical: 10,
-                  paddingHorizontal: 16,
-                  borderRadius: 10,
-                  backgroundColor:
-                    isSubmitting || isAnimating ? "#cccccc" : "#007AFF",
-                  opacity: pressed ? 0.85 : 1,
-                })}
-              >
-                <ThemedText style={{ color: "#fff", fontWeight: "600" }}>
-                  {isSubmitting ? "Submitting..." : isLast ? "Submit" : "Log"}
-                </ThemedText>
-              </Pressable>
+              <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+                <Pressable
+                  onPress={onNext}
+                  disabled={isSubmitting || isAnimating}
+                  accessibilityLabel={isLast ? "Submit entry" : "Next question"}
+                  style={({ pressed }) => ({
+                    paddingVertical: 12,
+                    paddingHorizontal: 24,
+                    borderRadius: 12,
+                    backgroundColor:
+                      isSubmitting || isAnimating
+                        ? "#999"
+                        : rating !== null
+                        ? "#007AFF"
+                        : "#ccc",
+                    opacity: pressed ? 0.8 : 1,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.15,
+                    shadowRadius: 4,
+                    elevation: 3,
+                  })}
+                >
+                  <ThemedText
+                    style={{ color: "#fff", fontWeight: "700", fontSize: 15 }}
+                  >
+                    {isSubmitting
+                      ? "Submitting..."
+                      : isLast
+                      ? "Submit ✓"
+                      : "Next →"}
+                  </ThemedText>
+                </Pressable>
+              </Animated.View>
             </ThemedView>
           </Animated.View>
 
-          {/* Next Question Preview - moves up to center */}
           {nextQuestion && (
             <Animated.View
               pointerEvents="none"
@@ -383,36 +620,44 @@ export default function HomeScreen() {
                 left: 0,
                 right: 0,
                 opacity: nextOpacity,
-                transform: [{ translateY: nextTranslateY }],
+                transform: [
+                  { translateY: nextTranslateY },
+                  { scale: nextScale },
+                  { scaleX: nextScaleX },
+                ],
               }}
             >
               <ThemedView
                 style={{
                   marginHorizontal: 20,
                   padding: 20,
-                  borderRadius: 12,
+                  borderRadius: 16,
                 }}
               >
-                <ThemedText
-                  style={{
-                    fontSize: 16,
-                    fontWeight: "500",
-                    color: "#666",
-                  }}
-                >
-                  {nextQuestion.prompt}
-                </ThemedText>
-                {nextQuestion.subDescription && (
+                <Animated.View style={{ opacity: nextTextOpacity }}>
                   <ThemedText
                     style={{
-                      fontSize: 12,
-                      color: "#999",
-                      marginTop: 4,
+                      fontSize: 18,
+                      fontWeight: "700",
+                      color: colorScheme === "dark" ? "#ccc" : "#444",
+                      lineHeight: 26,
                     }}
                   >
-                    {nextQuestion.subDescription}
+                    {nextQuestion.prompt}
                   </ThemedText>
-                )}
+                  {nextQuestion.subDescription && (
+                    <ThemedText
+                      style={{
+                        fontSize: 14,
+                        color: "#999",
+                        marginTop: 5,
+                        lineHeight: 20,
+                      }}
+                    >
+                      {nextQuestion.subDescription}
+                    </ThemedText>
+                  )}
+                </Animated.View>
               </ThemedView>
 
               <Animated.View
@@ -423,8 +668,8 @@ export default function HomeScreen() {
                   right: 0,
                   bottom: 0,
                   opacity: slideAnim.interpolate({
-                    inputRange: [0, 0.7, 1],
-                    outputRange: [1, 0.3, 0],
+                    inputRange: [0, 0.5, 0.8, 1],
+                    outputRange: [1, 0.6, 0.2, 0],
                   }),
                 }}
               >
@@ -432,7 +677,7 @@ export default function HomeScreen() {
                   colors={gradientColors}
                   style={{
                     flex: 1,
-                    borderRadius: 12,
+                    borderRadius: 16,
                   }}
                   pointerEvents="none"
                 />
@@ -443,16 +688,31 @@ export default function HomeScreen() {
           <ThemedView
             style={{
               position: "absolute",
-              bottom: 0,
+              bottom: 20,
               left: 0,
               right: 0,
-              paddingVertical: 14,
               alignItems: "center",
             }}
           >
-            <ThemedText style={{ color: "#666" }}>
-              Question {currentIndex + 1} of {questionList.length}
-            </ThemedText>
+            <ThemedView
+              style={{
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                borderRadius: 20,
+                backgroundColor:
+                  colorScheme === "dark"
+                    ? "rgba(255, 255, 255, 0.05)"
+                    : "rgba(0, 0, 0, 0.04)",
+              }}
+            >
+              <ThemedText style={{ color: "#888", fontSize: 13 }}>
+                <ThemedText style={{ color: "#007AFF", fontWeight: "700" }}>
+                  {currentIndex + 1}
+                </ThemedText>
+                {" of "}
+                {questionList.length}
+              </ThemedText>
+            </ThemedView>
           </ThemedView>
         </ThemedView>
       </ThemedView>

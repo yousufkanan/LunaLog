@@ -1,5 +1,11 @@
 import { Image } from "expo-image";
-import { Platform, StyleSheet, useColorScheme } from "react-native";
+import {
+  Platform,
+  StyleSheet,
+  useColorScheme,
+  Animated,
+  RefreshControl,
+} from "react-native";
 import { Collapsible } from "@/components/ui/collapsible";
 import { ExternalLink } from "@/components/external-link";
 import ParallaxScrollView from "@/components/parallax-scroll-view";
@@ -8,29 +14,25 @@ import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Fonts } from "@/constants/theme";
 import { Colors } from "@/constants/theme";
+import React, { useEffect, useRef, useState } from "react";
+import { LinearGradient } from "expo-linear-gradient";
+import { ScrollView } from "react-native";
 
-// --- New Component Based on Your Image ---
 type JournalEntryCardProps = {
   title: string;
   aiSummary: string;
   date: string;
-  moodScore: number; // 1-10
+  moodScore: number;
+  onRefresh?: () => void;
 };
 
-/**
- * Get color based on mood score (1-10)
- */
 function getMoodColor(score: number): string {
-  if (score <= 3) return "#EF4444"; // Red - Low mood
-  if (score <= 5) return "#F59E0B"; // Orange - Below average
-  if (score <= 7) return "#EAB308"; // Yellow - Average
-  if (score <= 9) return "#10B981"; // Green - Good mood
-  return "#06B6D4"; // Cyan - Excellent mood
+  if (score <= 3) return "#EF4444";
+  if (score <= 6) return "#F97316";
+  if (score < 9) return "#10B981";
+  return "#FFD700";
 }
 
-/**
- * A component to display a summary of a journal entry, based on your drawing.
- */
 export function JournalEntryCard({
   title,
   aiSummary,
@@ -41,45 +43,236 @@ export function JournalEntryCard({
   const iconColor = Colors[colorScheme].icon;
   const moodColor = getMoodColor(moodScore);
 
-  // Border color based on theme
-  const borderColor =
-    colorScheme === "dark" ? "rgba(255, 255, 255, 0.15)" : "rgba(0, 0, 0, 0.1)";
+  const glowAnim = useRef(new Animated.Value(0)).current;
+  const isGoldMood = moodScore >= 9;
 
-    /**
-     * If the mood Score is over 9 it needs to have a gloweffect to make it stand out more
-     * It needs to glow gold and have a sparkle effect really making it stand out
-    */
-   const glowStyle = moodScore > 9 ? { shadowColor: "#06B6D4", shadowRadius: 10, elevation: 5 } : {}
+  useEffect(() => {
+    if (isGoldMood) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(glowAnim, {
+            toValue: 1,
+            duration: 1500,
+            useNativeDriver: false,
+          }),
+          Animated.timing(glowAnim, {
+            toValue: 0,
+            duration: 1500,
+            useNativeDriver: false,
+          }),
+        ])
+      ).start();
+    }
+  }, [isGoldMood]);
+
+  const borderColor = isGoldMood
+    ? glowAnim.interpolate({
+        inputRange: [0, 0.5, 1],
+        outputRange: [
+          "rgba(255, 215, 0, 0.4)",
+          "rgba(255, 215, 0, 1)",
+          "rgba(255, 215, 0, 0.4)",
+        ],
+      })
+    : colorScheme === "dark"
+    ? "rgba(255, 255, 255, 0.15)"
+    : "rgba(0, 0, 0, 0.1)";
+
+  const shadowOpacity = isGoldMood
+    ? glowAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0.3, 0.9],
+      })
+    : 0.08;
+
+  const shadowRadius = isGoldMood
+    ? glowAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [8, 20],
+      })
+    : 4;
+
+  const goldGradient = ["#FFD700", "#FFA500", "#FFD700"];
 
   return (
-    <ThemedView style={[styles.journalCard, { borderColor }]}>
+    <Animated.View
+      style={[
+        styles.journalCard,
+        {
+          borderColor: borderColor,
+          borderWidth: isGoldMood ? 3 : 1.5,
+          shadowColor: isGoldMood ? "#FFD700" : "#000",
+          shadowOffset: { width: 0, height: isGoldMood ? 0 : 2 },
+          shadowOpacity: shadowOpacity,
+          shadowRadius: shadowRadius,
+          elevation: isGoldMood ? 10 : 2,
+          overflow: "hidden",
+        },
+      ]}
+    >
+      {/* Gold gradient background for 9-10 scores */}
+      {isGoldMood && (
+        <LinearGradient
+          colors={goldGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0,
+            opacity: 0.15,
+          }}
+        />
+      )}
+
       {/* Accent bar on the left with mood color */}
-      <ThemedView style={[styles.accentBar, { backgroundColor: moodColor }]} />
+      <Animated.View
+        style={[
+          styles.accentBar,
+          {
+            backgroundColor: moodColor,
+            ...(isGoldMood && {
+              shadowColor: "#FFD700",
+              shadowOpacity: 0.9,
+              shadowRadius: 12,
+              shadowOffset: { width: 0, height: 0 },
+              elevation: 5,
+            }),
+          },
+        ]}
+      />
 
       {/* Header with Title and Mood Score Badge */}
       <ThemedView style={styles.cardHeader}>
-        <ThemedText type="defaultSemiBold" style={styles.journalTitle}>
+        <ThemedText
+          type="defaultSemiBold"
+          style={[
+            styles.journalTitle,
+            isGoldMood && {
+              color: colorScheme === "dark" ? "#FFD700" : "#B8860B",
+            },
+          ]}
+        >
           {title}
         </ThemedText>
 
         {/* Mood Score Badge */}
-        <ThemedView style={[styles.moodBadge, { backgroundColor: moodColor }]}>
-          <ThemedText style={styles.moodText}>{moodScore}</ThemedText>
-        </ThemedView>
+        <Animated.View
+          style={[
+            styles.moodBadge,
+            {
+              backgroundColor: moodColor,
+              ...(isGoldMood && {
+                shadowColor: "#FFD700",
+                shadowOpacity: glowAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.6, 1],
+                }),
+                shadowRadius: 15,
+                shadowOffset: { width: 0, height: 0 },
+                elevation: 8,
+              }),
+            },
+          ]}
+        >
+          <ThemedText style={styles.moodText}>
+            {moodScore}
+            {isGoldMood && " ✨"}
+          </ThemedText>
+        </Animated.View>
       </ThemedView>
 
       {/* AI Summary */}
-      <ThemedText style={styles.journalSummary}>{aiSummary}</ThemedText>
+      <ThemedText
+        style={[
+          styles.journalSummary,
+          isGoldMood && {
+            color: colorScheme === "dark" ? "#E6C200" : "#8B6914",
+          },
+        ]}
+      >
+        {aiSummary}
+      </ThemedText>
 
       {/* Footer with Date and Arrow */}
       <ThemedView style={styles.cardFooter}>
-        <ThemedText style={styles.dateText}>{date}</ThemedText>
-        <IconSymbol name="arrow.right.circle" size={20} color={iconColor} />
+        <ThemedText
+          style={[
+            styles.dateText,
+            isGoldMood && {
+              color: colorScheme === "dark" ? "#D4AF37" : "#9A7B2E",
+            },
+          ]}
+        >
+          {date}
+        </ThemedText>
+        <IconSymbol
+          name="arrow.right.circle"
+          size={20}
+          color={
+            isGoldMood
+              ? colorScheme === "dark"
+                ? "#FFD700"
+                : "#B8860B"
+              : iconColor
+          }
+        />
       </ThemedView>
-    </ThemedView>
+    </Animated.View>
   );
 }
-// --- End of New Component ---
+
+// Example wrapper component showing how to use pull-to-refresh
+type JournalListProps = {
+  entries: Array<{
+    id: string;
+    title: string;
+    aiSummary: string;
+    date: string;
+    moodScore: number;
+  }>;
+  onRefresh?: () => Promise<void>;
+};
+
+export function JournalList({ entries, onRefresh }: JournalListProps) {
+  const [refreshing, setRefreshing] = useState(false);
+  const colorScheme = useColorScheme() ?? "light";
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    if (onRefresh) {
+      await onRefresh();
+    }
+    setRefreshing(false);
+  };
+
+  return (
+    <ScrollView
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          tintColor={colorScheme === "dark" ? "#fff" : "#000"}
+          colors={["#007AFF"]} // Android
+          progressBackgroundColor={colorScheme === "dark" ? "#333" : "#fff"} // Android
+        />
+      }
+      contentContainerStyle={styles.scrollContainer}
+    >
+      {entries.map((entry) => (
+        <JournalEntryCard
+          key={entry.id}
+          title={entry.title}
+          aiSummary={entry.aiSummary}
+          date={entry.date}
+          moodScore={entry.moodScore}
+        />
+      ))}
+    </ScrollView>
+  );
+}
 
 const styles = StyleSheet.create({
   headerImage: {
@@ -92,19 +285,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 8,
   },
+  scrollContainer: {
+    padding: 16,
+  },
   // --- Card Styles ---
   journalCard: {
     padding: 16,
     paddingLeft: 20,
     marginVertical: 8,
     borderRadius: 12,
-    borderWidth: 1.5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
     position: "relative",
+    backgroundColor: "transparent",
   },
   accentBar: {
     position: "absolute",
