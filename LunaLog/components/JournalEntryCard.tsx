@@ -45,6 +45,11 @@ export function JournalEntryCard({
   const borderColor =
     colorScheme === "dark" ? "rgba(255, 255, 255, 0.15)" : "rgba(0, 0, 0, 0.1)";
 
+    /**
+     * If the mood Score is over 9 it needs to have a gloweffect to make it stand out more
+    */
+   const glowStyle = moodScore > 9 ? { shadowColor: "#06B6D4", shadowRadius: 10, elevation: 5 } : {};
+
   return (
     <ThemedView style={[styles.journalCard, { borderColor }]}>
       {/* Accent bar on the left with mood color */}
