@@ -44,11 +44,9 @@ export default function HomeScreen() {
       setEntries(Array.isArray(data) ? data : []);
     } catch (e) {
       setEntries([]);
-      // optionally log error
     }
   };
 
-  // Typing animation effect for welcome
   useEffect(() => {
     if (!splashFinished || !showWelcome) return;
 
@@ -105,7 +103,6 @@ export default function HomeScreen() {
 
     if (success) {
       fetchEntries();
-      // Show AI Overview screen
       setShowAIOverview(true);
     } else {
       Alert.alert(
@@ -326,7 +323,7 @@ export default function HomeScreen() {
           >
             {typedText1}
             {typedText1.length < welcomeLine1.length && (
-              <ThemedText style={{ color: "#007AFF" }}>|</ThemedText>
+              <ThemedText style={{ color: "#d2d2d2ff" }}>|</ThemedText>
             )}
           </ThemedText>
           {typedText1.length >= welcomeLine1.length && (
@@ -340,7 +337,7 @@ export default function HomeScreen() {
             >
               {typedText2}
               {typedText2.length < welcomeLine2.length && (
-                <ThemedText style={{ color: "#007AFF" }}>|</ThemedText>
+                <ThemedText style={{ color: "#d2d2d2ff" }}>|</ThemedText>
               )}
             </ThemedText>
           )}

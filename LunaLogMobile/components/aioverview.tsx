@@ -205,7 +205,7 @@ export default function AIOverviewScreen({
           >
             {typedOverviewTitle}
             {typedOverviewTitle.length < overviewTitle.length && (
-              <ThemedText style={{ color: "#007AFF" }}>|</ThemedText>
+              <ThemedText style={{ color: "#d2d2d2ff" }}>|</ThemedText>
             )}
           </ThemedText>
         </Animated.View>
