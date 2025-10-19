@@ -44,11 +44,9 @@ export default function HomeScreen() {
       setEntries(Array.isArray(data) ? data : []);
     } catch (e) {
       setEntries([]);
-      // optionally log error
     }
   };
 
-  // Typing animation effect for welcome
   useEffect(() => {
     if (!splashFinished || !showWelcome) return;
 
@@ -105,7 +103,6 @@ export default function HomeScreen() {
 
     if (success) {
       fetchEntries();
-      // Show AI Overview screen
       setShowAIOverview(true);
     } else {
       Alert.alert(

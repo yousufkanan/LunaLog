@@ -1,13 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Image } from "expo-image";
 import { Platform, StyleSheet, RefreshControl, ScrollView } from "react-native";
-import { Collapsible } from "@/components/ui/collapsible";
-import { ExternalLink } from "@/components/external-link";
-import ParallaxScrollView from "@/components/parallax-scroll-view";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { IconSymbol } from "@/components/ui/icon-symbol";
-import { Fonts } from "@/constants/theme";
 import { JournalEntryCard } from "@/components/JournalEntryCard";
 import { getJournalEntries } from "@/scripts/journalService";
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -23,7 +17,6 @@ export default function TabTwoScreen() {
       setEntries(Array.isArray(data) ? data : []);
     } catch (e) {
       setEntries([]);
-      // optionally log error
     }
   };
 
@@ -36,7 +29,6 @@ export default function TabTwoScreen() {
         console.log("Fetched entries:", entries);
       } catch (e) {
         if (mounted) setEntries([]);
-        // optionally log error
       }
     })();
     return () => {
@@ -73,7 +65,6 @@ export default function TabTwoScreen() {
           paddingBottom: 12,
         }}
       >
-        {/* Changed title to "Entries" from your image */}
         <ThemedView style={styles.titleContainer}>
           <ThemedText type="title">Entries</ThemedText>
         </ThemedView>
